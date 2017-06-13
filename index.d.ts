@@ -15,7 +15,6 @@ import {
 import { DatastoreQuery } from './DatastoreQuery';
 import { DatastoreRequest } from './DatastoreRequest';
 
-
 export interface DatastoreInitOptions {
     apiEndpoint?: string;
     namespace?: string;
@@ -25,24 +24,21 @@ export interface DatastoreInitOptions {
 }
 
 export interface Datastore extends DatastoreRequest {
+    readonly KEY: KEY_SYMBOL;
 
-    KEY: KEY_SYMBOL;
-
-    createQuery(namespace: string, kind: string): DatastoreQuery;
-    createQuery(kind: string): DatastoreQuery;
+    /** If kind is omitted, then "namespace" param is interpreted as 'kind' */
+    createQuery(namespace: string, kind?: string): DatastoreQuery;
 
     int(value: string | number): DatastoreInt;
     double(value: string | number): DatastoreDouble;
     geoPoint(coordinates: DatastoreCoordinates): DatastoreGeopoint;
     key(pathOrOptions: DatastoreKeyPath | DatastoreKeyOptions): DatastoreKey;
 
-
-    MORE_RESULTS_AFTER_CURSOR: 'MORE_RESULTS_AFTER_CURSOR';
-    MORE_RESULTS_AFTER_LIMIT: 'MORE_RESULTS_AFTER_LIMIT';
-    NO_MORE_RESULTS: 'NO_MORE_RESULTS';
+    readonly MORE_RESULTS_AFTER_CURSOR: 'MORE_RESULTS_AFTER_CURSOR';
+    readonly MORE_RESULTS_AFTER_LIMIT: 'MORE_RESULTS_AFTER_LIMIT';
+    readonly NO_MORE_RESULTS: 'NO_MORE_RESULTS';
 
     determineBaseUrl_(customApiEndpoint: string): void;
 }
 
-
-export default function datastore(options: DatastoreInitOptions): Datastore;
+export default function Datastore(options: DatastoreInitOptions): Datastore;

@@ -1,11 +1,10 @@
 import { DatastoreKey } from './DatastoreEntity';
 
-
 export interface DatastoreOrderOptions {
     descending: boolean;
 }
 
-export type QueryCallback<T, U> = (err: Error, entities: T[], info: QueryCallbackInfo) => U;
+export type QueryCallback<T, U> = (err: Error | undefined, entities: T[], info: QueryCallbackInfo) => U;
 
 export type QueryPromiseData<T> = [T[], QueryCallbackInfo];
 
@@ -19,7 +18,6 @@ interface DatastoreQueryOptions {
 }
 
 export interface DatastoreQuery {
-
     filter(property: string, operator: '<' | '=' | '>', value: any): this;
     filter(property: string, value: any): this;
 
@@ -34,12 +32,9 @@ export interface DatastoreQuery {
     limit(n: number): this;
     offset(n: number): this;
 
-    run<T>(): Promise<QueryPromiseData<T>>;
-    run<T>(options: DatastoreQueryOptions): Promise<QueryPromiseData<T>>;
-
     run<T, U>(callback: QueryCallback<T, U>): void;
     run<T, U>(options: DatastoreQueryOptions, callback: QueryCallback<T, U>): void;
+    run<T>(options?: DatastoreQueryOptions): Promise<QueryPromiseData<T>>;
 
     runStream(): NodeJS.ReadableStream;
-
 }

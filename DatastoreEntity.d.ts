@@ -1,4 +1,3 @@
-
 export interface DatastoreInt {
     value: string;
 }
@@ -21,7 +20,7 @@ export interface DatastoreKeyOptions {
     path: DatastoreKeyPath;
 }
 
-export type DatastoreKeyPath = (string | number | DatastoreInt)[];
+export type DatastoreKeyPath = Array<string | number | DatastoreInt>;
 
 export interface DatastoreKey {
     id?: string;
