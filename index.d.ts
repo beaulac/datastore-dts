@@ -13,7 +13,8 @@ import {
     KEY_SYMBOL
 } from './DatastoreEntity';
 import { DatastoreQuery } from './DatastoreQuery';
-import { DatastoreRequest } from './DatastoreRequest';
+import { ApiResult, DatastoreRequest, OneOrMany } from './DatastoreRequest';
+import { DatastoreTransaction } from './DatastoreTransaction';
 
 export interface DatastoreInitOptions {
     apiEndpoint?: string;
@@ -29,6 +30,11 @@ export interface Datastore extends DatastoreRequest {
     /** If kind is omitted, then "namespace" param is interpreted as 'kind' */
     createQuery(namespace: string, kind?: string): DatastoreQuery;
 
+    save<T>(entities: OneOrMany<T>): Promise<ApiResult>;
+    delete(keys: DatastoreKey | DatastoreKey[]): Promise<ApiResult>;
+
+    transaction(): DatastoreTransaction;
+
     int(value: string | number): DatastoreInt;
     double(value: string | number): DatastoreDouble;
     geoPoint(coordinates: DatastoreCoordinates): DatastoreGeopoint;
@@ -38,7 +44,7 @@ export interface Datastore extends DatastoreRequest {
     readonly MORE_RESULTS_AFTER_LIMIT: 'MORE_RESULTS_AFTER_LIMIT';
     readonly NO_MORE_RESULTS: 'NO_MORE_RESULTS';
 
-    determineBaseUrl_(customApiEndpoint: string): void;
+    determineBaseUrl_(customApiEndpoint?: string): void;
 }
 
 export default function Datastore(options: DatastoreInitOptions): Datastore;

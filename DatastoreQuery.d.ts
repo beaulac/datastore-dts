@@ -8,11 +8,11 @@ export type QueryCallback<T, U> = (err: Error | undefined, entities: T[], info: 
 
 export type QueryPromiseData<T> = [T[], QueryCallbackInfo];
 
-interface QueryCallbackInfo {
+export interface QueryCallbackInfo {
     endCursor?: string;
     moreResults: 'MORE_RESULTS_AFTER_CURSOR' | 'MORE_RESULTS_AFTER_LIMIT' | 'NO_MORE_RESULTS';
 }
-interface DatastoreQueryOptions {
+export interface DatastoreQueryOptions {
     consistency?: 'strong' | 'eventual';
     maxApiCalls?: number;
 }

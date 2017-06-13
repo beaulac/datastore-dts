@@ -1,21 +1,30 @@
 import { DatastoreKey } from './DatastoreEntity';
-import { DatastoreQuery, DatastoreQueryOptions, QueryCallback, QueryPromiseData } from './DatastoreQuery';
+import {
+    DatastoreQuery,
+    DatastoreQueryOptions,
+    QueryCallback,
+    QueryCallbackInfo,
+    QueryPromiseData
+} from './DatastoreQuery';
 
 // TODO Flesh this out with other properties:
 export interface DatastoreApiResponse {
     mutationResults?: any;
+    [otherKeys: string]: any;
 }
 
-type KeyAllocationCallback<U> = (err: Error | undefined, keys: DatastoreKey[]) => U;
+type OptionalError = Error | undefined;
+
+type SingleGetCallback<T, U> = (err: OptionalError, entity: T) => U;
+type SingleGetResult<T> = [T, QueryCallbackInfo];
+
+type MultiGetCallback<T, U> = SingleGetCallback<T[], U>;
+type MultiGetResult<T> = SingleGetResult<T[]>;
+
+type KeyAllocationCallback<U> = (err: OptionalError, keys: DatastoreKey[], apiResponse: DatastoreApiResponse) => U;
 type AllocationResult = [DatastoreKey[], DatastoreApiResponse];
 
-type SingleGetCallback<T, U> = (err: Error | undefined, entities: T[]) => U;
-type SingleGetResult<T> = [T, DatastoreApiResponse];
-
-type MultiGetResult<T> = SingleGetResult<T[]>;
-type MultiGetCallback<T, U> = SingleGetCallback<T[], U>;
-
-type ApiCallback<U> = (err: Error, result: DatastoreApiResponse) => U;
+type ApiCallback<U> = (err: OptionalError, result: DatastoreApiResponse) => U;
 type ApiResult = [DatastoreApiResponse];
 
 export interface DatastorePayload<T> {
@@ -35,7 +44,12 @@ export interface DatastoreRequest {
     createReadStream(keys: DatastoreKey | DatastoreKey[], options: DatastoreQueryOptions): NodeJS.ReadableStream;
 
     delete<T>(keys: DatastoreKey | DatastoreKey[], callback: ApiCallback<T>): void;
-    delete<T>(keys: DatastoreKey | DatastoreKey[]): Promise<ApiResult>;
+    /**
+     * Overridden inconsistently:
+     * {@link DatastoreTransaction} has void implementation
+     * {@link Datastore} has Promise<ApiResult> implementation
+     */
+    delete<T>(keys: DatastoreKey | DatastoreKey[]): Promise<ApiResult> | void;
 
     get<T, U>(key: DatastoreKey, options: DatastoreQueryOptions, callback: SingleGetCallback<T, U>): void;
     get<T, U>(keys: DatastoreKey[], options: DatastoreQueryOptions, callback: MultiGetCallback<T, U>): void;
@@ -54,7 +68,12 @@ export interface DatastoreRequest {
     runQueryStream(query: DatastoreQuery, options?: DatastoreQueryOptions): NodeJS.ReadableStream;
 
     save<T, U>(entities: OneOrMany<T>, callback: ApiCallback<U>): void;
-    save<T>(entities: OneOrMany<T>): Promise<ApiResult>;
+    /**
+     * Overridden inconsistently:
+     * {@link DatastoreTransaction} has void implementation
+     * {@link Datastore} has Promise<ApiResult> implementation
+     */
+    save<T>(entities: OneOrMany<T>): Promise<ApiResult> | void;
 
     insert<T, U>(entities: OneOrMany<T>, callback: ApiCallback<U>): void;
     insert<T>(entities: OneOrMany<T>): Promise<ApiResult>;
