@@ -6,30 +6,30 @@ import {
     DatastoreDouble,
     DatastoreGeopoint,
     DatastoreInt,
-    DatastoreKey as Key,
+    DatastoreKey,
     DatastoreKeyOptions,
     DatastoreKeyPath,
     KEY_SYMBOL
 } from './DatastoreEntity';
-import * as Query from './DatastoreQuery';
-import * as Request from './DatastoreRequest';
-import * as Transaction from './DatastoreTransaction';
+import * as DatastoreQuery from './DatastoreQuery';
+import * as DatastoreRequest from './DatastoreRequest';
+import * as DatastoreTransaction from './DatastoreTransaction';
 
 export = Datastore;
 
-declare class Datastore extends Request {
+declare class Datastore extends DatastoreRequest {
     constructor(options: Datastore.DatastoreInitOptions);
 
     readonly KEY: KEY_SYMBOL;
 
     /** If kind is omitted, then "namespace" param is interpreted as 'kind' */
-    createQuery(namespace: string, kind?: string): Query;
+    createQuery(namespace: string, kind?: string): DatastoreQuery;
 
-    save<T>(entities: Request.OneOrMany<T>): Promise<Request.ApiResult>;
+    save<T>(entities: DatastoreRequest.OneOrMany<T>): Promise<DatastoreRequest.ApiResult>;
 
-    'delete'(keys: Key | Key[]): Promise<Request.ApiResult>;
+    'delete'(keys: DatastoreKey | DatastoreKey[]): Promise<DatastoreRequest.ApiResult>;
 
-    transaction(): Transaction;
+    transaction(): DatastoreTransaction;
 
     int(value: string | number): DatastoreInt;
 
@@ -37,7 +37,7 @@ declare class Datastore extends Request {
 
     geoPoint(coordinates: DatastoreCoordinates): DatastoreGeopoint;
 
-    key(pathOrOptions: DatastoreKeyPath | DatastoreKeyOptions): Key;
+    key(pathOrOptions: DatastoreKeyPath | DatastoreKeyOptions): DatastoreKey;
 
     readonly MORE_RESULTS_AFTER_CURSOR: 'MORE_RESULTS_AFTER_CURSOR';
     readonly MORE_RESULTS_AFTER_LIMIT: 'MORE_RESULTS_AFTER_LIMIT';
