@@ -1,7 +1,6 @@
 // Type definitions for google-cloud-datastore
 // Project: https://github.com/GoogleCloudPlatform/google-cloud-node#cloud-datastore-ga
 // Definitions by: OctHuber Inc. / Antoine Beauvais-Lacasse <abeaulac@octhuber.com>
-
 import {
     DatastoreCoordinates,
     DatastoreDouble,
