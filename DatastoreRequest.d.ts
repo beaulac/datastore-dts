@@ -1,73 +1,50 @@
 import { DatastoreKey } from './DatastoreEntity';
-import {
-    DatastoreQuery,
-    DatastoreQueryOptions,
-    QueryCallback,
-    QueryCallbackInfo,
-    QueryPromiseData
-} from './DatastoreQuery';
+import { QueryCallback, QueryCallbackInfo, QueryOptions, QueryPromiseData } from './DatastoreQuery';
+import ApiResult = DatastoreRequest.ApiResult;
+import ApiCallback = DatastoreRequest.ApiCallback;
+import SingleGetCallback = DatastoreRequest.SingleGetCallback;
+import MultiGetCallback = DatastoreRequest.MultiGetCallback;
+import SingleGetResult = DatastoreRequest.SingleGetResult;
+import MultiGetResult = DatastoreRequest.MultiGetResult;
+import OneOrMany = DatastoreRequest.OneOrMany;
+import AllocationCallback = DatastoreRequest.AllocationCallback;
+import AllocationResult = DatastoreRequest.AllocationResult;
 
-// TODO Flesh this out with other properties:
-export interface DatastoreApiResponse {
-    mutationResults?: any;
-    [otherKeys: string]: any;
-}
+import DatastoreQuery = require('./DatastoreQuery');
 
-type OptionalError = Error | undefined;
+export = DatastoreRequest;
 
-type SingleGetCallback<T, U> = (err: OptionalError, entity: T) => U;
-type SingleGetResult<T> = [T, QueryCallbackInfo];
+declare class DatastoreRequest {
+    allocateIds(incompleteKey: DatastoreKey, n: number, callback: AllocationCallback): void;
+    allocateIds(incompleteKey: DatastoreKey, n: number): Promise<AllocationResult>;
 
-type MultiGetCallback<T, U> = SingleGetCallback<T[], U>;
-type MultiGetResult<T> = SingleGetResult<T[]>;
+    createReadStream(keys: DatastoreKey | DatastoreKey[], options: QueryOptions): NodeJS.ReadableStream;
 
-type KeyAllocationCallback<U> = (err: OptionalError, keys: DatastoreKey[], apiResponse: DatastoreApiResponse) => U;
-type AllocationResult = [DatastoreKey[], DatastoreApiResponse];
-
-type ApiCallback<U> = (err: OptionalError, result: DatastoreApiResponse) => U;
-type ApiResult = [DatastoreApiResponse];
-
-export interface DatastorePayload<T> {
-    key: DatastoreKey;
-    // TODO Include possibility of 'raw data' with indexing options, etc:
-    data: T | any;
-}
-
-type ObjOrPayload<T> = T | DatastorePayload<T>;
-
-type OneOrMany<T> = ObjOrPayload<T> | Array<ObjOrPayload<T>>;
-
-export interface DatastoreRequest {
-    allocateIds<T>(incompleteKey: DatastoreKey, n: number, callback: KeyAllocationCallback<T>): void;
-    allocateIds<T>(incompleteKey: DatastoreKey, n: number): Promise<AllocationResult>;
-
-    createReadStream(keys: DatastoreKey | DatastoreKey[], options: DatastoreQueryOptions): NodeJS.ReadableStream;
-
-    delete<T>(keys: DatastoreKey | DatastoreKey[], callback: ApiCallback<T>): void;
+    'delete'<T>(keys: DatastoreKey | DatastoreKey[], callback: ApiCallback): void;
     /**
      * Overridden inconsistently:
      * {@link DatastoreTransaction} has void implementation
      * {@link Datastore} has Promise<ApiResult> implementation
      */
-    delete<T>(keys: DatastoreKey | DatastoreKey[]): Promise<ApiResult> | void;
+    'delete'<T>(keys: DatastoreKey | DatastoreKey[]): Promise<ApiResult> | void;
 
-    get<T, U>(key: DatastoreKey, options: DatastoreQueryOptions, callback: SingleGetCallback<T, U>): void;
-    get<T, U>(keys: DatastoreKey[], options: DatastoreQueryOptions, callback: MultiGetCallback<T, U>): void;
+    get<T>(key: DatastoreKey, options: QueryOptions, callback: SingleGetCallback<T>): void;
+    get<T>(keys: DatastoreKey[], options: QueryOptions, callback: MultiGetCallback<T>): void;
 
-    get<T, U>(key: DatastoreKey, callback: SingleGetCallback<T, U>): void;
-    get<T, U>(keys: DatastoreKey[], callback: MultiGetCallback<T, U>): void;
+    get<T>(key: DatastoreKey, callback: SingleGetCallback<T>): void;
+    get<T>(keys: DatastoreKey[], callback: MultiGetCallback<T>): void;
 
-    get<T>(key: DatastoreKey, options?: DatastoreQueryOptions): Promise<SingleGetResult<T>>;
-    get<T>(keys: DatastoreKey[], options?: DatastoreQueryOptions): Promise<MultiGetResult<T>>;
+    get<T>(key: DatastoreKey, options?: QueryOptions): Promise<SingleGetResult<T>>;
+    get<T>(keys: DatastoreKey[], options?: QueryOptions): Promise<MultiGetResult<T>>;
 
-    runQuery<T, U>(query: DatastoreQuery, options: DatastoreQueryOptions, callback: QueryCallback<T, U>): void;
-    runQuery<T, U>(query: DatastoreQuery, callback: QueryCallback<T, U>): void;
+    runQuery<T>(query: DatastoreQuery, options: QueryOptions, callback: QueryCallback<T>): void;
+    runQuery<T>(query: DatastoreQuery, callback: QueryCallback<T>): void;
 
-    runQuery<T>(query: DatastoreQuery, options?: DatastoreQueryOptions): QueryPromiseData<T>;
+    runQuery<T>(query: DatastoreQuery, options?: QueryOptions): QueryPromiseData<T>;
 
-    runQueryStream(query: DatastoreQuery, options?: DatastoreQueryOptions): NodeJS.ReadableStream;
+    runQueryStream(query: DatastoreQuery, options?: QueryOptions): NodeJS.ReadableStream;
 
-    save<T, U>(entities: OneOrMany<T>, callback: ApiCallback<U>): void;
+    save<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
     /**
      * Overridden inconsistently:
      * {@link DatastoreTransaction} has void implementation
@@ -75,12 +52,41 @@ export interface DatastoreRequest {
      */
     save<T>(entities: OneOrMany<T>): Promise<ApiResult> | void;
 
-    insert<T, U>(entities: OneOrMany<T>, callback: ApiCallback<U>): void;
+    insert<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
     insert<T>(entities: OneOrMany<T>): Promise<ApiResult>;
 
-    update<T, U>(entities: OneOrMany<T>, callback: ApiCallback<U>): void;
+    update<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
     update<T>(entities: OneOrMany<T>): Promise<ApiResult>;
 
-    upsert<T, U>(entities: OneOrMany<T>, callback: ApiCallback<U>): void;
+    upsert<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
     upsert<T>(entities: OneOrMany<T>): Promise<ApiResult>;
+}
+
+declare namespace DatastoreRequest {
+    // TODO Flesh this out with other properties:
+    interface ApiResponse {
+        mutationResults?: any;
+        [otherKeys: string]: any;
+    }
+    type ApiCallback = (err: Error | undefined, result: ApiResponse) => void;
+    type ApiResult = [ApiResponse];
+
+    type SingleGetCallback<T> = (err: Error | undefined, entity: T) => void;
+    type SingleGetResult<T> = [T, QueryCallbackInfo];
+
+    type MultiGetCallback<T> = SingleGetCallback<T[]>;
+    type MultiGetResult<T> = SingleGetResult<T[]>;
+
+    type AllocationCallback = (err: Error | undefined, keys: DatastoreKey[], apiResponse: ApiResponse) => void;
+    type AllocationResult = [DatastoreKey[], ApiResponse];
+
+    interface DatastorePayload<T> {
+        key: DatastoreKey;
+        // TODO Include possibility of 'raw data' with indexing options, etc:
+        data: T | any;
+    }
+
+    type ObjOrPayload<T> = T | DatastorePayload<T>;
+
+    type OneOrMany<T> = ObjOrPayload<T> | Array<ObjOrPayload<T>>;
 }

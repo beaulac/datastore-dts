@@ -1,31 +1,28 @@
 import { DatastoreKey } from './DatastoreEntity';
-import { DatastoreQuery } from './DatastoreQuery';
-import {
-    ApiCallback,
-    ApiResult,
-    DatastoreApiResponse,
-    DatastoreRequest,
-    OneOrMany,
-    OptionalError
-} from './DatastoreRequest';
+import { ApiCallback, ApiResponse, ApiResult, OneOrMany } from './DatastoreRequest';
+import Request = require('./DatastoreRequest');
+import Query = require('./DatastoreQuery');
 
-type TransactionCallback<U> = (error: OptionalError, transaction: DatastoreTransaction, apiResponse: DatastoreApiResponse) => U;
-type TransactionResult = [DatastoreTransaction, DatastoreApiResponse];
+export = DatastoreTransaction;
 
-export interface DatastoreTransaction extends DatastoreRequest {
+declare interface DatastoreTransaction extends Request {
     /** If kind is omitted, then "namespace" param is interpreted as 'kind' */
-    createQuery(namespace: string, kind?: string): DatastoreQuery;
+    createQuery(namespace: string, kind?: string): Query;
 
-    /** NB: If a callback is supplied, it is *ignored*! */
-    save<T>(entities: OneOrMany<T>, callback?: never): void;
-    delete(keys: DatastoreKey | DatastoreKey[], callback?: never): void;
+    save<T>(entities: OneOrMany<T>): void;
+    'delete'(keys: DatastoreKey | DatastoreKey[]): void;
 
     commit(): Promise<ApiResult>;
-    commit<U>(callback: ApiCallback<U>): void;
+    commit(callback: ApiCallback): void;
 
     rollback(): Promise<ApiResult>;
-    rollback<U>(callback: ApiCallback<U>): void;
+    rollback<U>(callback: ApiCallback): void;
 
-    run<U>(callback: TransactionCallback<U>): void;
-    run(): Promise<TransactionResult>;
+    run(callback: DatastoreTransaction.TransactionCallback): void;
+    run(): Promise<DatastoreTransaction.TransactionResult>;
+}
+
+declare namespace DatastoreTransaction {
+    type TransactionCallback = (error: Error | undefined, transaction: DatastoreTransaction, apiResponse: ApiResponse) => void;
+    type TransactionResult = [DatastoreTransaction, ApiResponse];
 }

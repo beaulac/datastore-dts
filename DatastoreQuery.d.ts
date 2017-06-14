@@ -1,28 +1,13 @@
 import { DatastoreKey } from './DatastoreEntity';
 
-export interface DatastoreOrderOptions {
-    descending: boolean;
-}
+export = DatastoreQuery;
 
-export type QueryCallback<T, U> = (err: Error | undefined, entities: T[], info: QueryCallbackInfo) => U;
-
-export type QueryPromiseData<T> = [T[], QueryCallbackInfo];
-
-export interface QueryCallbackInfo {
-    endCursor?: string;
-    moreResults: 'MORE_RESULTS_AFTER_CURSOR' | 'MORE_RESULTS_AFTER_LIMIT' | 'NO_MORE_RESULTS';
-}
-export interface DatastoreQueryOptions {
-    consistency?: 'strong' | 'eventual';
-    maxApiCalls?: number;
-}
-
-export interface DatastoreQuery {
+declare interface DatastoreQuery {
     filter(property: string, operator: '<' | '=' | '>', value: any): this;
     filter(property: string, value: any): this;
 
     hasAncestor(key: DatastoreKey): this;
-    order(property: string, options?: DatastoreOrderOptions): this;
+    order(property: string, options?: DatastoreQuery.OrderOptions): this;
     groupBy(properties: string | string[]): this;
     select(properties: string | string[]): this;
 
@@ -32,9 +17,28 @@ export interface DatastoreQuery {
     limit(n: number): this;
     offset(n: number): this;
 
-    run<T, U>(callback: QueryCallback<T, U>): void;
-    run<T, U>(options: DatastoreQueryOptions, callback: QueryCallback<T, U>): void;
-    run<T>(options?: DatastoreQueryOptions): Promise<QueryPromiseData<T>>;
+    run<T>(callback: DatastoreQuery.QueryCallback<T>): void;
+    run<T>(options: DatastoreQuery.QueryOptions, callback: DatastoreQuery.QueryCallback<T>): void;
+    run<T>(options?: DatastoreQuery.QueryOptions): Promise<DatastoreQuery.QueryPromiseData<T>>;
 
     runStream(): NodeJS.ReadableStream;
+}
+
+declare namespace DatastoreQuery {
+    interface OrderOptions {
+        descending: boolean;
+    }
+
+    type QueryCallback<T> = (err: Error | undefined, entities: T[], info: QueryCallbackInfo) => void;
+
+    type QueryPromiseData<T> = [T[], QueryCallbackInfo];
+
+    interface QueryCallbackInfo {
+        endCursor?: string;
+        moreResults: 'MORE_RESULTS_AFTER_CURSOR' | 'MORE_RESULTS_AFTER_LIMIT' | 'NO_MORE_RESULTS';
+    }
+    interface QueryOptions {
+        consistency?: 'strong' | 'eventual';
+        maxApiCalls?: number;
+    }
 }

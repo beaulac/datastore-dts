@@ -6,38 +6,38 @@ import {
     DatastoreDouble,
     DatastoreGeopoint,
     DatastoreInt,
-    DatastoreKey,
+    DatastoreKey as Key,
     DatastoreKeyOptions,
     DatastoreKeyPath,
     KEY_SYMBOL
 } from './DatastoreEntity';
-import { DatastoreQuery } from './DatastoreQuery';
-import { ApiResult, DatastoreRequest, OneOrMany } from './DatastoreRequest';
-import { DatastoreTransaction } from './DatastoreTransaction';
+import * as Query from './DatastoreQuery';
+import * as Request from './DatastoreRequest';
+import * as Transaction from './DatastoreTransaction';
 
-export interface DatastoreInitOptions {
-    apiEndpoint?: string;
-    namespace?: string;
-    projectId?: string;
-    keyFilename?: string;
-    credentials?: {};
-}
+export = Datastore;
 
-export interface Datastore extends DatastoreRequest {
+declare class Datastore extends Request {
+    constructor(options: Datastore.DatastoreInitOptions);
+
     readonly KEY: KEY_SYMBOL;
 
     /** If kind is omitted, then "namespace" param is interpreted as 'kind' */
-    createQuery(namespace: string, kind?: string): DatastoreQuery;
+    createQuery(namespace: string, kind?: string): Query;
 
-    save<T>(entities: OneOrMany<T>): Promise<ApiResult>;
-    delete(keys: DatastoreKey | DatastoreKey[]): Promise<ApiResult>;
+    save<T>(entities: Request.OneOrMany<T>): Promise<Request.ApiResult>;
 
-    transaction(): DatastoreTransaction;
+    'delete'(keys: Key | Key[]): Promise<Request.ApiResult>;
+
+    transaction(): Transaction;
 
     int(value: string | number): DatastoreInt;
+
     double(value: string | number): DatastoreDouble;
+
     geoPoint(coordinates: DatastoreCoordinates): DatastoreGeopoint;
-    key(pathOrOptions: DatastoreKeyPath | DatastoreKeyOptions): DatastoreKey;
+
+    key(pathOrOptions: DatastoreKeyPath | DatastoreKeyOptions): Key;
 
     readonly MORE_RESULTS_AFTER_CURSOR: 'MORE_RESULTS_AFTER_CURSOR';
     readonly MORE_RESULTS_AFTER_LIMIT: 'MORE_RESULTS_AFTER_LIMIT';
@@ -46,4 +46,12 @@ export interface Datastore extends DatastoreRequest {
     determineBaseUrl_(customApiEndpoint?: string): void;
 }
 
-export default function Datastore(options: DatastoreInitOptions): Datastore;
+declare namespace Datastore {
+    interface DatastoreInitOptions {
+        apiEndpoint?: string;
+        namespace?: string;
+        projectId?: string;
+        keyFilename?: string;
+        credentials?: {};
+    }
+}
