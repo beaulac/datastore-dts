@@ -1,49 +1,54 @@
 // Type definitions for @google-cloud/datastore v1.0.2
 // Project: https://github.com/GoogleCloudPlatform/google-cloud-node#cloud-datastore-ga
 // Definitions by: OctHuber Inc. / Antoine Beauvais-Lacasse <abeaulac@octhuber.com>
-import {
-    DatastoreCoordinates,
-    DatastoreDouble,
-    DatastoreGeopoint,
-    DatastoreInt,
-    DatastoreKey,
-    DatastoreKeyOptions,
-    DatastoreKeyPath,
-    KEY_SYMBOL
-} from './';
 
-export = Datastore;
+declare module '@google-cloud/datastore' {
+    export = Datastore;
 
-declare class Datastore extends DatastoreRequest {
-    constructor(options: Datastore.DatastoreInitOptions);
+    import {
+        DatastoreKey,
+        KEY_SYMBOL,
+        DatastoreInt,
+        DatastoreDouble,
+        DatastoreGeopoint,
+        DatastoreKeyPath,
+        DatastoreKeyOptions,
+        DatastoreCoords,
+        OneOrMany
+    } from '@google-cloud/datastore/entity';
+    import { DatastoreRequest as DatastoreRequest_, ApiResult } from '@google-cloud/datastore/request';
+    import { Query as DatastoreQuery } from '@google-cloud/datastore/query';
+    import { DatastoreTransaction } from '@google-cloud/datastore/transaction';
 
-    readonly KEY: KEY_SYMBOL;
+    class Datastore extends DatastoreRequest_ {
+        constructor(options: InitOptions);
 
-    /** If kind is omitted, then "namespace" param is interpreted as 'kind' */
-    createQuery(namespace: string, kind?: string): DatastoreQuery;
+        readonly KEY: KEY_SYMBOL;
+        readonly MORE_RESULTS_AFTER_CURSOR: Datastore.MoreResultsAfterCursor;
+        readonly MORE_RESULTS_AFTER_LIMIT: Datastore.MoreResultsAfterLimit;
+        readonly NO_MORE_RESULTS: Datastore.NoMoreResults;
 
-    save<T>(entities: OneOrMany<T>): Promise<DatastoreRequest.ApiResult>;
+        /** If second param is omitted, first param is taken as 'kind' */
+        createQuery(namespaceOrKind: string, kind?: string): DatastoreQuery;
 
-    'delete'(keys: DatastoreKey | DatastoreKey[]): Promise<DatastoreRequest.ApiResult>;
+        save<T>(entities: OneOrMany<T>): Promise<ApiResult>;
 
-    transaction(): DatastoreTransaction;
+        delete(keys: DatastoreKey | DatastoreKey[]): Promise<ApiResult>;
 
-    int(value: string | number): DatastoreInt;
+        transaction(): DatastoreTransaction;
 
-    double(value: string | number): DatastoreDouble;
+        int(value: string | number): DatastoreInt;
 
-    geoPoint(coordinates: DatastoreCoordinates): DatastoreGeopoint;
+        double(value: string | number): DatastoreDouble;
 
-    key(pathOrOptions: DatastoreKeyPath | DatastoreKeyOptions): DatastoreKey;
+        geoPoint(coordinates: DatastoreCoords): DatastoreGeopoint;
 
-    readonly MORE_RESULTS_AFTER_CURSOR: 'MORE_RESULTS_AFTER_CURSOR';
-    readonly MORE_RESULTS_AFTER_LIMIT: 'MORE_RESULTS_AFTER_LIMIT';
-    readonly NO_MORE_RESULTS: 'NO_MORE_RESULTS';
+        key(pathOrOptions: DatastoreKeyPath | DatastoreKeyOptions): DatastoreKey;
 
-    determineBaseUrl_(customApiEndpoint?: string): void;
-}
-declare namespace Datastore {
-    interface DatastoreInitOptions {
+        determineBaseUrl_(customApiEndpoint?: string): void;
+    }
+
+    interface InitOptions {
         apiEndpoint?: string;
         namespace?: string;
         projectId?: string;
@@ -51,6 +56,23 @@ declare namespace Datastore {
         credentials?: {};
     }
 
+    namespace Datastore {
+        type MoreResultsAfterCursor = 'MORE_RESULTS_AFTER_CURSOR';
+        type MoreResultsAfterLimit = 'MORE_RESULTS_AFTER_LIMIT';
+        type NoMoreResults = 'NO_MORE_RESULTS';
+
+        const KEY: KEY_SYMBOL;
+        const MORE_RESULTS_AFTER_CURSOR: MoreResultsAfterCursor;
+        const MORE_RESULTS_AFTER_LIMIT: MoreResultsAfterLimit;
+        const NO_MORE_RESULTS: NoMoreResults;
+
+        const Query: typeof DatastoreQuery;
+        const DatastoreRequest: typeof DatastoreRequest_;
+        const Transaction: typeof DatastoreTransaction;
+    }
+}
+
+declare module '@google-cloud/datastore/entity' {
     interface DatastoreInt {
         value: string;
     }
@@ -58,12 +80,12 @@ declare namespace Datastore {
         value: string;
     }
 
-    interface DatastoreCoordinates {
+    interface DatastoreCoords {
         latitude: number;
         longitude: number;
     }
     interface DatastoreGeopoint {
-        value: DatastoreCoordinates;
+        value: DatastoreCoords;
     }
 
     type DatastoreKeyPath = Array<string | number | DatastoreInt>;
@@ -72,10 +94,10 @@ declare namespace Datastore {
         path: DatastoreKeyPath;
     }
     interface DatastoreKey {
+        kind: string;
         id?: string;
         name?: string;
 
-        kind: string;
         path: DatastoreKeyPath;
 
         parent?: DatastoreKey;
@@ -88,134 +110,145 @@ declare namespace Datastore {
         // TODO Include possibility of 'raw data' with indexing options, etc:
         data: T | any;
     }
+    /**
+     * NB: TS does not support defining symbol-keyed properties on interfaces.
+     * If using a raw T object, it MUST have property with key={@link Datastore#KEY} & value:{@link DatastoreKey}.
+     */
+    type ObjOrPayload<T> = T | DatastorePayload<T>;
+    type OneOrMany<T> = ObjOrPayload<T> | Array<ObjOrPayload<T>>;
 }
 
-declare interface DatastoreQuery {
-    filter(property: string, operator: '<' | '=' | '>', value: any): this;
-    filter(property: string, value: any): this;
+declare module '@google-cloud/datastore/query' {
+    import { DatastoreKey } from '@google-cloud/datastore/entity';
+    import { MoreResultsAfterCursor, MoreResultsAfterLimit, NoMoreResults } from '@google-cloud/datastore';
 
-    hasAncestor(key: DatastoreKey): this;
-    order(property: string, options?: DatastoreQuery.OrderOptions): this;
-    groupBy(properties: string | string[]): this;
-    select(properties: string | string[]): this;
+    class Query {
+        constructor(scope: string, kinds: string, namespace: string);
 
-    start(cursorToken: string): this;
-    end(cursorToken: string): this;
+        filter(property: string, operator: QueryFilterOperator, value: any): this;
+        filter(property: string, value: any): this;
 
-    limit(n: number): this;
-    offset(n: number): this;
+        hasAncestor(key: DatastoreKey): this;
 
-    run<T>(callback: DatastoreQuery.QueryCallback<T>): void;
-    run<T>(options: DatastoreQuery.QueryOptions, callback: DatastoreQuery.QueryCallback<T>): void;
-    run<T>(options?: DatastoreQuery.QueryOptions): Promise<DatastoreQuery.QueryPromiseData<T>>;
+        order(property: string, options?: OrderOptions): this;
 
-    runStream(): NodeJS.ReadableStream;
-}
-declare namespace DatastoreQuery {
-    interface OrderOptions {
-        descending: boolean;
+        groupBy(properties: string | string[]): this;
+
+        select(properties: string | string[]): this;
+
+        start(cursorToken: string): this;
+
+        end(cursorToken: string): this;
+
+        limit(n: number): this;
+
+        offset(n: number): this;
+
+        run<T>(callback: QueryCallback<T>): void;
+        run<T>(options: QueryOptions, callback: QueryCallback<T>): void;
+        run<T>(options?: QueryOptions): Promise<QueryResult<T>>;
+
+        runStream(): NodeJS.ReadableStream;
     }
 
-    type QueryCallback<T> = (err: Error | undefined, entities: T[], info: QueryCallbackInfo) => void;
-
-    type QueryPromiseData<T> = [T[], QueryCallbackInfo];
-
-    interface QueryCallbackInfo {
-        endCursor?: string;
-        moreResults: 'MORE_RESULTS_AFTER_CURSOR' | 'MORE_RESULTS_AFTER_LIMIT' | 'NO_MORE_RESULTS';
+    type QueryFilterOperator = '<' | '=' | '>';
+    interface OrderOptions {
+        descending: boolean;
     }
     interface QueryOptions {
         consistency?: 'strong' | 'eventual';
         maxApiCalls?: number;
     }
+
+    interface QueryInfo {
+        endCursor?: string;
+        moreResults: MoreResultsAfterCursor | MoreResultsAfterLimit | NoMoreResults;
+    }
+    type QueryCallback<T> = (err: Error, entities: T[], info: QueryInfo) => void;
+    type QueryResult<T> = [T[], QueryInfo];
 }
 
-declare class DatastoreRequest {
-    allocateIds(incompleteKey: DatastoreKey, n: number, callback: DatastoreRequest.AllocationCallback): void;
-    allocateIds(incompleteKey: DatastoreKey, n: number): Promise<DatastoreRequest.AllocationResult>;
+declare module '@google-cloud/datastore/request' {
+    import { DatastoreKey, OneOrMany } from '@google-cloud/datastore/entity';
+    import { Query, QueryCallback, QueryOptions, QueryResult } from '@google-cloud/datastore/query';
 
-    createReadStream(keys: DatastoreKey | DatastoreKey[], options: DatastoreQuery.QueryOptions): NodeJS.ReadableStream;
-
-    'delete'<T>(keys: DatastoreKey | DatastoreKey[], callback: DatastoreRequest.ApiCallback): void;
     /**
-     * Overridden inconsistently:
-     * {@link DatastoreTransaction} has void implementation
-     * {@link Datastore} has Promise<DatastoreRequest.ApiResult> implementation
+     * Creates requests to the Datastore endpoint.
+     * Designed to be inherited by {@link Datastore} & {@link DatastoreTransaction}
      */
-    'delete'<T>(keys: DatastoreKey | DatastoreKey[]): Promise<DatastoreRequest.ApiResult> | void;
+    abstract class DatastoreRequest {
+        allocateIds(incompleteKey: DatastoreKey, n: number, callback: AllocationCallback): void;
+        allocateIds(incompleteKey: DatastoreKey, n: number): Promise<AllocationResult>;
 
-    get<T>(key: DatastoreKey, options: DatastoreQuery.QueryOptions, callback: DatastoreRequest.SingleGetCallback<T>): void;
-    get<T>(keys: DatastoreKey[], options: DatastoreQuery.QueryOptions, callback: DatastoreRequest.MultiGetCallback<T>): void;
+        createReadStream(keys: DatastoreKey | DatastoreKey[], options: QueryOptions): NodeJS.ReadableStream;
 
-    get<T>(key: DatastoreKey, callback: DatastoreRequest.SingleGetCallback<T>): void;
-    get<T>(keys: DatastoreKey[], callback: DatastoreRequest.MultiGetCallback<T>): void;
+        delete<T>(keys: DatastoreKey | DatastoreKey[], callback: ApiCallback): void;
 
-    get<T>(key: DatastoreKey, options?: DatastoreQuery.QueryOptions): Promise<DatastoreRequest.SingleGetResult<T>>;
-    get<T>(keys: DatastoreKey[], options?: DatastoreQuery.QueryOptions): Promise<DatastoreRequest.MultiGetResult<T>>;
+        get<T>(key: DatastoreKey, options: QueryOptions, callback: GetCallback<T>): void;
+        get<T>(keys: DatastoreKey[], options: QueryOptions, callback: GetCallback<T[]>): void;
+        get<T>(key: DatastoreKey, callback: GetCallback<T>): void;
+        get<T>(keys: DatastoreKey[], callback: GetCallback<T[]>): void;
+        get<T>(key: DatastoreKey, options?: QueryOptions): Promise<[T]>;
+        get<T>(keys: DatastoreKey[], options?: QueryOptions): Promise<[T[]]>;
 
-    runQuery<T>(query: DatastoreQuery, options: DatastoreQuery.QueryOptions, callback: DatastoreQuery.QueryCallback<T>): void;
-    runQuery<T>(query: DatastoreQuery, callback: DatastoreQuery.QueryCallback<T>): void;
+        runQuery<T>(query: Query, options: QueryOptions, callback: QueryCallback<T>): void;
+        runQuery<T>(query: Query, callback: QueryCallback<T>): void;
+        runQuery<T>(query: Query, options?: QueryOptions): QueryResult<T>;
 
-    runQuery<T>(query: DatastoreQuery, options?: DatastoreQuery.QueryOptions): DatastoreQuery.QueryPromiseData<T>;
+        runQueryStream(query: Query, options?: QueryOptions): NodeJS.ReadableStream;
 
-    runQueryStream(query: DatastoreQuery, options?: DatastoreQuery.QueryOptions): NodeJS.ReadableStream;
+        save<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
 
-    save<T, U>(entities: OneOrMany<T>, callback: DatastoreRequest.ApiCallback): void;
-    /**
-     * Overridden inconsistently:
-     * {@link DatastoreTransaction} has void implementation
-     * {@link Datastore} has Promise<DatastoreRequest.ApiResult> implementation
-     */
-    save<T>(entities: OneOrMany<T>): Promise<DatastoreRequest.ApiResult> | void;
+        insert<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
+        insert<T>(entities: OneOrMany<T>): Promise<ApiResult>;
 
-    insert<T, U>(entities: OneOrMany<T>, callback: DatastoreRequest.ApiCallback): void;
-    insert<T>(entities: OneOrMany<T>): Promise<DatastoreRequest.ApiResult>;
+        update<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
+        update<T>(entities: OneOrMany<T>): Promise<ApiResult>;
 
-    update<T, U>(entities: OneOrMany<T>, callback: DatastoreRequest.ApiCallback): void;
-    update<T>(entities: OneOrMany<T>): Promise<DatastoreRequest.ApiResult>;
+        upsert<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
+        upsert<T>(entities: OneOrMany<T>): Promise<ApiResult>;
+    }
 
-    upsert<T, U>(entities: OneOrMany<T>, callback: DatastoreRequest.ApiCallback): void;
-    upsert<T>(entities: OneOrMany<T>): Promise<DatastoreRequest.ApiResult>;
-}
-declare namespace DatastoreRequest {
-    // TODO Flesh this out with other properties:
+    // TODO Flesh this out with other property keys:
     interface ApiResponse {
         mutationResults?: any;
         [otherKeys: string]: any;
     }
-    type ApiCallback = (err: Error | undefined, result: ApiResponse) => void;
+    type ApiCallback = (err: Error, result: ApiResponse) => void;
     type ApiResult = [ApiResponse];
 
-    type SingleGetCallback<T> = (err: Error | undefined, entity: T) => void;
-    type SingleGetResult<T> = [T, DatastoreQuery.QueryCallbackInfo];
+    type GetCallback<T> = (err: Error, entity: T) => void;
 
-    type MultiGetCallback<T> = SingleGetCallback<T[]>;
-    type MultiGetResult<T> = SingleGetResult<T[]>;
-
-    type AllocationCallback = (err: Error | undefined, keys: DatastoreKey[], apiResponse: ApiResponse) => void;
+    type AllocationCallback = (err: Error, keys: DatastoreKey[], apiResponse: ApiResponse) => void;
     type AllocationResult = [DatastoreKey[], ApiResponse];
 }
 
-declare interface DatastoreTransaction extends DatastoreRequest {
-    /** If kind is omitted, then "namespace" param is interpreted as 'kind' */
-    createQuery(namespace: string, kind?: string): DatastoreQuery;
+declare module '@google-cloud/datastore/transaction' {
+    import Datastore = require('@google-cloud/datastore');
+    import { DatastoreKey, OneOrMany } from '@google-cloud/datastore/entity';
+    import { Query } from '@google-cloud/datastore/query';
+    import { DatastoreRequest, ApiCallback, ApiResponse, ApiResult } from '@google-cloud/datastore/request';
 
-    save<T>(entities: OneOrMany<T>): void;
-    'delete'(keys: DatastoreKey | DatastoreKey[]): void;
+    class DatastoreTransaction extends DatastoreRequest {
+        constructor(datastore: Datastore);
 
-    commit(): Promise<DatastoreRequest.ApiResult>;
-    commit(callback: DatastoreRequest.ApiCallback): void;
+        /** If second param is omitted, first param is taken as 'kind' */
+        createQuery(namespaceOrKind: string, kind?: string): Query;
 
-    rollback(): Promise<DatastoreRequest.ApiResult>;
-    rollback<U>(callback: DatastoreRequest.ApiCallback): void;
+        save<T>(entities: OneOrMany<T>): void;
 
-    run(callback: DatastoreTransaction.TransactionCallback): void;
-    run(): Promise<DatastoreTransaction.TransactionResult>;
+        delete(keys: DatastoreKey | DatastoreKey[]): void;
+
+        commit(): Promise<ApiResult>;
+        commit(callback: ApiCallback): void;
+
+        rollback(): Promise<ApiResult>;
+        rollback<U>(callback: ApiCallback): void;
+
+        run(callback: TransactionCallback): void;
+        run(): Promise<TransactionResult>;
+    }
+
+    type TransactionCallback = (err: Error, transaction: DatastoreTransaction, apiResponse: ApiResponse) => void;
+    type TransactionResult = [DatastoreTransaction, ApiResponse];
 }
-declare namespace DatastoreTransaction {
-    type TransactionCallback = (error: Error | undefined, transaction: DatastoreTransaction, apiResponse: DatastoreRequest.ApiResponse) => void;
-    type TransactionResult = [DatastoreTransaction, DatastoreRequest.ApiResponse];
-}
-
-type ObjOrPayload<T> = T | Datastore.DatastorePayload<T>;
-type OneOrMany<T> = ObjOrPayload<T> | Array<ObjOrPayload<T>>;
