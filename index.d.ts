@@ -16,7 +16,7 @@ declare module '@google-cloud/datastore' {
         DatastoreCoords,
         OneOrMany
     } from '@google-cloud/datastore/entity';
-    import { DatastoreRequest as DatastoreRequest_, ApiResult } from '@google-cloud/datastore/request';
+    import { DatastoreRequest as DatastoreRequest_, ApiCallback, ApiResult } from '@google-cloud/datastore/request';
     import { Query as DatastoreQuery } from '@google-cloud/datastore/query';
     import { DatastoreTransaction } from '@google-cloud/datastore/transaction';
 
@@ -31,8 +31,10 @@ declare module '@google-cloud/datastore' {
         /** If second param is omitted, first param is taken as 'kind' */
         createQuery(namespaceOrKind: string, kind?: string): DatastoreQuery;
 
+        save<T>(entities: OneOrMany<T>, callback: ApiCallback): void;
         save<T>(entities: OneOrMany<T>): Promise<ApiResult>;
 
+        delete<T>(entities: OneOrMany<T>, callback: ApiCallback): void;
         delete(keys: DatastoreKey | DatastoreKey[]): Promise<ApiResult>;
 
         transaction(): DatastoreTransaction;
@@ -111,8 +113,8 @@ declare module '@google-cloud/datastore/entity' {
         data: T | any;
     }
     /**
-     * NB: TS does not support defining symbol-keyed properties on interfaces.
-     * If using a raw T object, it MUST have property with key={@link Datastore#KEY} & value:{@link DatastoreKey}.
+     * NB: TS does not support computed symbol keys (yet: https://github.com/Microsoft/TypeScript/pull/15473)
+     * If using a raw T object, it MUST have a {@link Datastore#KEY} symbol property of type {@link DatastoreKey}.
      */
     type ObjOrPayload<T> = T | DatastorePayload<T>;
     type OneOrMany<T> = ObjOrPayload<T> | Array<ObjOrPayload<T>>;
@@ -151,7 +153,7 @@ declare module '@google-cloud/datastore/query' {
         runStream(): NodeJS.ReadableStream;
     }
 
-    type QueryFilterOperator = '<' | '=' | '>';
+    type QueryFilterOperator = '<' | '<=' | '=' | '>=' | '>';
     interface OrderOptions {
         descending: boolean;
     }
@@ -162,7 +164,7 @@ declare module '@google-cloud/datastore/query' {
 
     interface QueryInfo {
         endCursor?: string;
-        moreResults: MoreResultsAfterCursor | MoreResultsAfterLimit | NoMoreResults;
+        readonly moreResults: MoreResultsAfterCursor | MoreResultsAfterLimit | NoMoreResults;
     }
     type QueryCallback<T> = (err: Error, entities: T[], info: QueryInfo) => void;
     type QueryResult<T> = [T[], QueryInfo];
@@ -184,6 +186,7 @@ declare module '@google-cloud/datastore/request' {
         createReadStream(keys: DatastoreKey | DatastoreKey[], options: QueryOptions): stream.Readable;
 
         delete<T>(keys: DatastoreKey | DatastoreKey[], callback: ApiCallback): void;
+        delete<T>(keys: DatastoreKey | DatastoreKey[]): Promise<ApiResult> | void;
 
         get<T>(key: DatastoreKey, options: QueryOptions, callback: GetCallback<T>): void;
         get<T>(keys: DatastoreKey[], options: QueryOptions, callback: GetCallback<T[]>): void;
@@ -198,15 +201,16 @@ declare module '@google-cloud/datastore/request' {
 
         runQueryStream(query: Query, options?: QueryOptions): stream.Readable;
 
-        save<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
+        save<T>(entities: OneOrMany<T>, callback: ApiCallback): void;
+        save<T>(entities: OneOrMany<T>): Promise<ApiResult> | void;
 
-        insert<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
+        insert<T>(entities: OneOrMany<T>, callback: ApiCallback): void;
         insert<T>(entities: OneOrMany<T>): Promise<ApiResult>;
 
-        update<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
+        update<T>(entities: OneOrMany<T>, callback: ApiCallback): void;
         update<T>(entities: OneOrMany<T>): Promise<ApiResult>;
 
-        upsert<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
+        upsert<T>(entities: OneOrMany<T>, callback: ApiCallback): void;
         upsert<T>(entities: OneOrMany<T>): Promise<ApiResult>;
     }
 
@@ -244,7 +248,7 @@ declare module '@google-cloud/datastore/transaction' {
         commit(callback: ApiCallback): void;
 
         rollback(): Promise<ApiResult>;
-        rollback<U>(callback: ApiCallback): void;
+        rollback(callback: ApiCallback): void;
 
         run(callback: TransactionCallback): void;
         run(): Promise<TransactionResult>;
