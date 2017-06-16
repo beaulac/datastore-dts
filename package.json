@@ -11,11 +11,11 @@
     "lint": "./node_modules/.bin/tslint -p ./tsconfig.json --type-check ./*.d.ts"
   },
   "devDependencies": {
-    "dtslint": "latest",
+    "dtslint": "0.1.1",
     "tslint": "^5.4.3",
     "typescript": "2.3.2"
   },
   "dependencies": {
-    "@types/node": "^1.0.0"
+    "@types/node": "^0.12.4"
   }
 }

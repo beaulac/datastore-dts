@@ -169,6 +169,7 @@ declare module '@google-cloud/datastore/query' {
 }
 
 declare module '@google-cloud/datastore/request' {
+    import * as stream from 'stream';
     import { DatastoreKey, OneOrMany } from '@google-cloud/datastore/entity';
     import { Query, QueryCallback, QueryOptions, QueryResult } from '@google-cloud/datastore/query';
 
@@ -180,7 +181,7 @@ declare module '@google-cloud/datastore/request' {
         allocateIds(incompleteKey: DatastoreKey, n: number, callback: AllocationCallback): void;
         allocateIds(incompleteKey: DatastoreKey, n: number): Promise<AllocationResult>;
 
-        createReadStream(keys: DatastoreKey | DatastoreKey[], options: QueryOptions): NodeJS.ReadableStream;
+        createReadStream(keys: DatastoreKey | DatastoreKey[], options: QueryOptions): stream.Readable;
 
         delete<T>(keys: DatastoreKey | DatastoreKey[], callback: ApiCallback): void;
 
@@ -195,7 +196,7 @@ declare module '@google-cloud/datastore/request' {
         runQuery<T>(query: Query, callback: QueryCallback<T>): void;
         runQuery<T>(query: Query, options?: QueryOptions): QueryResult<T>;
 
-        runQueryStream(query: Query, options?: QueryOptions): NodeJS.ReadableStream;
+        runQueryStream(query: Query, options?: QueryOptions): stream.Readable;
 
         save<T, U>(entities: OneOrMany<T>, callback: ApiCallback): void;
 
