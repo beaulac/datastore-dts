@@ -1,18 +1,28 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "moduleResolution": "node",
-    "target": "es6",
     "lib": [
       "es6"
     ],
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
+    "strictFunctionTypes": false,
+    "typeRoots": [
+      "."
+    ],
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@google-cloud/datastore": [
+        "."
+      ]
+    },
     "noEmit": true,
     "forceConsistentCasingInFileNames": true
   },
-  "typeRoots": [
-    "."
+  "files": [
+    "index.d.ts",
+    "google-cloud__datastore-tests.ts"
   ]
 }
