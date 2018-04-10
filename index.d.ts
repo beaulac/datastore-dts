@@ -2,7 +2,7 @@
 // Project: https://github.com/googleapis/nodejs-datastore
 // Definitions by: Antoine Beauvais-Lacasse <https://github.com/beaulac>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 2.4
+// TypeScript Version: 2.7
 
 /// <reference types="node" />
 
@@ -18,30 +18,30 @@ declare module '@google-cloud/datastore' {
         DatastoreKeyPath,
         DatastoreKeyOptions,
         DatastoreCoords,
-        OneOrMany
+        OneOrMany,
     } from '@google-cloud/datastore/entity';
     import {
         DatastoreRequest as DatastoreRequest_,
         CommitCallback,
-        CommitResult
+        CommitResult,
     } from '@google-cloud/datastore/request';
     import {
         Query as DatastoreQuery,
         MoreResultsAfterCursor,
         MoreResultsAfterLimit,
-        NoMoreResults
+        NoMoreResults,
     } from '@google-cloud/datastore/query';
     import { DatastoreTransaction } from '@google-cloud/datastore/transaction';
 
     class Datastore extends DatastoreRequest_ {
         constructor(options: InitOptions);
 
-        readonly KEY: KEY_SYMBOL;
+        readonly KEY: typeof KEY_SYMBOL;
         readonly MORE_RESULTS_AFTER_CURSOR: MoreResultsAfterCursor;
         readonly MORE_RESULTS_AFTER_LIMIT: MoreResultsAfterLimit;
         readonly NO_MORE_RESULTS: NoMoreResults;
 
-        static readonly KEY: KEY_SYMBOL;
+        static readonly KEY: typeof KEY_SYMBOL;
         static readonly MORE_RESULTS_AFTER_CURSOR: MoreResultsAfterCursor;
         static readonly MORE_RESULTS_AFTER_LIMIT: MoreResultsAfterLimit;
         static readonly NO_MORE_RESULTS: NoMoreResults;
@@ -108,17 +108,16 @@ declare module '@google-cloud/datastore/entity' {
         value: DatastoreCoords;
     }
 
-    type PathElement = string | number | DatastoreInt;
-
     /**
      * DatastoreKeyPath is structured as [kind, identifier, kind, identifier, ...]
      * `kind` must be a string, `identifier` is a PathElement
      */
+    type PathElement = string | number | DatastoreInt;
     type DatastoreKeyPath = PathElement[];
 
     interface DatastoreKeyOptions {
         namespace?: string;
-        path: DatastoreKeyPath;
+        path: ReadonlyArray<PathElement>;
     }
 
     interface DatastoreKey {
@@ -126,28 +125,40 @@ declare module '@google-cloud/datastore/entity' {
         id?: string;
         name?: string;
 
-        namespace?: string;
-
         readonly path: DatastoreKeyPath;
 
         parent?: DatastoreKey;
+
+        namespace: string;
     }
 
-    type KEY_SYMBOL = symbol;
+    const KEY_SYMBOL: unique symbol;
 
-    interface DatastorePayload<T> {
+    type KeyedBySymbol<T> = T & { [KEY_SYMBOL]: DatastoreKey };
+
+    interface KeyedByProperty {
         key: DatastoreKey;
-        // TODO Include possibility of 'raw data' with indexing options, etc
-        data: T | object;
+    }
+
+    interface LongPayload<T> extends KeyedByProperty {
+        data: Array<EntityDataProperty<T>>;
+    }
+
+    interface EntityDataProperty<T> {
+        name: keyof T;
+        value: any;
+        excludeFromIndexes?: boolean;
+    }
+
+    interface ShortPayload<T> extends KeyedByProperty {
+        data: T;
         excludeFromIndexes?: string[];
     }
 
-    /**
-     * NB: TS does not support computed symbol keys (yet: https://github.com/Microsoft/TypeScript/pull/15473)
-     * If using a raw T object, it MUST have a {@link Datastore_#KEY} symbol property of type {@link DatastoreKey}.
-     */
-    type ObjOrPayload<T> = T | DatastorePayload<T>;
-    type OneOrMany<T> = ObjOrPayload<T> | Array<ObjOrPayload<T>>;
+    type DatastorePayload<T> = LongPayload<T> | ShortPayload<T>;
+
+    type ObjOrPayload<T> = KeyedBySymbol<T> | DatastorePayload<T>;
+    type OneOrMany<T extends object = object> = ObjOrPayload<T> | Array<ObjOrPayload<T>>;
 }
 
 declare module '@google-cloud/datastore/query' {
