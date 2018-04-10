@@ -126,6 +126,8 @@ declare module '@google-cloud/datastore/entity' {
         id?: string;
         name?: string;
 
+        namespace?: string;
+
         readonly path: DatastoreKeyPath;
 
         parent?: DatastoreKey;
