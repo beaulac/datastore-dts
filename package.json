@@ -1,22 +1,19 @@
 {
   "name": "@types/google-cloud__datastore",
   "license": "Apache-2.0",
-  "version": "1.3.4",
+  "version": "1.4.0",
   "private": true,
-  "description": "TypeScript definitions for the @google-cloud/datastore v1.3",
+  "description": "TypeScript definitions for the @google-cloud/datastore v1.4",
   "main": "",
-  "types": "index.d.ts",
+  "types": "types/google-cloud__datastore/index.d.ts",
   "author": "Antoine Beauvais-Lacasse <antoine.beaulac@gmail.com>",
   "repository": "https://github.com/octhuber/datastore-dts",
   "scripts": {
     "lint": "tslint -p ./tsconfig.json ./*.d.ts"
   },
   "devDependencies": {
+    "@types/node": "^8.5.2",
     "dtslint": "github:Microsoft/dtslint#production",
-    "tslint": "latest",
-    "typescript": "2.8.1"
-  },
-  "dependencies": {
-    "@types/node": "^8.5.2"
+    "typescript": "^2.7.1"
   }
 }

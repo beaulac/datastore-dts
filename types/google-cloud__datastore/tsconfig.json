@@ -9,10 +9,10 @@
     "strictNullChecks": true,
     "strictFunctionTypes": false,
     "typeRoots": [
-      "."
+      "../.."
     ],
     "types": [],
-    "baseUrl": ".",
+    "baseUrl": "../..",
     "paths": {
       "@google-cloud/datastore": [
         "."
@@ -22,7 +22,7 @@
     "forceConsistentCasingInFileNames": true
   },
   "files": [
-    "index.d.ts",
-    "google-cloud__datastore-tests.ts"
+    "types/google-cloud__datastore/index.d.ts",
+    "types/google-cloud__datastore/google-cloud__datastore-tests.ts"
   ]
 }

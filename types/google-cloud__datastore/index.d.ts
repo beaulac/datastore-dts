@@ -82,24 +82,24 @@ declare module '@google-cloud/datastore' {
     }
 
     namespace Datastore {
-        export const KEY: typeof KEY_SYMBOL;
-        export const MORE_RESULTS_AFTER_CURSOR: Query.MoreResultsAfterCursor;
-        export const MORE_RESULTS_AFTER_LIMIT: Query.MoreResultsAfterLimit;
-        export const NO_MORE_RESULTS: Query.NoMoreResults;
+        const KEY: typeof KEY_SYMBOL;
+        const MORE_RESULTS_AFTER_CURSOR: Query.MoreResultsAfterCursor;
+        const MORE_RESULTS_AFTER_LIMIT: Query.MoreResultsAfterLimit;
+        const NO_MORE_RESULTS: Query.NoMoreResults;
 
-        export function int(value: string | number): DatastoreInt;
+        function int(value: string | number): DatastoreInt;
 
-        export function isInt(value: any): value is DatastoreInt;
+        function isInt(value: any): value is DatastoreInt;
 
-        export function double(value: string | number): DatastoreDouble;
+        function double(value: string | number): DatastoreDouble;
 
-        export function isDouble(value: any): value is DatastoreDouble;
+        function isDouble(value: any): value is DatastoreDouble;
 
-        export function geoPoint(coordinates: DatastoreCoords): DatastoreGeopoint;
+        function geoPoint(coordinates: DatastoreCoords): DatastoreGeopoint;
 
-        export function isGeoPoint(value: any): value is DatastoreGeopoint;
+        function isGeoPoint(value: any): value is DatastoreGeopoint;
 
-        export function isKey(value: any): value is DatastoreKey;
+        function isKey(value: any): value is DatastoreKey;
 
         interface InitOptions {
             apiEndpoint?: string;
