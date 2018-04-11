@@ -1,27 +1,33 @@
 import Datastore = require('@google-cloud/datastore');
+import Query = require('@google-cloud/datastore/query');
+import DatastoreTransaction = require('@google-cloud/datastore/transaction');
+import QueryInfo = Query.QueryInfo;
+import QueryOptions = Query.QueryOptions;
+import QueryResult = Query.QueryResult;
+import QueryCallback = Query.QueryCallback;
+import TransactionResult = DatastoreTransaction.TransactionResult;
 import {
     DatastoreDouble,
     DatastoreGeopoint,
     DatastoreInt,
     DatastoreKey,
-    DatastoreKeyPath
+    DatastoreKeyPath, KeyedBySymbol,
 } from '@google-cloud/datastore/entity';
-import { Query, QueryCallback, QueryInfo, QueryOptions, QueryResult } from '@google-cloud/datastore/query';
 import { AllocateIdsResult, CommitCallback, CommitResponse, CommitResult } from '@google-cloud/datastore/request';
-import { DatastoreTransaction, TransactionResult } from '@google-cloud/datastore/transaction';
 
 interface TestEntity {
     name?: string;
     location?: string;
     symbol?: string;
 
-    [keySymbol: string]: any;
+    [Datastore.KEY]: DatastoreKey;
 }
 
 const kind = 'Company';
 const entityToCreate: TestEntity = {
     name: 'Google',
-    location: 'CA'
+    location: 'CA',
+    [Datastore.KEY]: undefined as any,
 };
 
 const ds: Datastore = new Datastore({
@@ -29,7 +35,7 @@ const ds: Datastore = new Datastore({
                                         namespace: 'project-namespace',
                                         projectId: 'project-id',
                                         keyFilename: '../secret.json',
-                                        credentials: {}
+                                        credentials: {},
                                     });
 ds.determineBaseUrl_('http://localhost:8081');
 
@@ -39,7 +45,7 @@ const isInt = ds.isInt(dsInt);
 const dsDouble: DatastoreDouble = ds.double('3.14');
 const isDouble = ds.isDouble(dsDouble);
 
-const dsGeopoint: DatastoreGeopoint = ds.geoPoint({latitude: 0, longitude: 0});
+const dsGeopoint: DatastoreGeopoint = ds.geoPoint({ latitude: 0, longitude: 0 });
 const isGeoPoint = ds.isGeoPoint(dsGeopoint);
 
 // Keys creation:
@@ -49,7 +55,7 @@ const isKey = ds.isKey(key);
 const ancestorKey: DatastoreKey = ds.key(['ParentCompany', 'Alphabet']);
 const keyWithOptions: DatastoreKey = ds.key({
                                                 namespace: 'special-namespace',
-                                                path: keyPath
+                                                path: keyPath,
                                             });
 const incompleteKey = ds.key([kind]);
 
@@ -59,14 +65,14 @@ ds.allocateIds(incompleteKey, 1, (err: Error, keys: DatastoreKey[]) => {
 const allocationPromise: Promise<AllocateIdsResult> = ds.allocateIds(incompleteKey, 1);
 
 // Query creation:
-const manuallyCreatedQuery = new Datastore.Query('scope', kind, 'namespace');
-const options: QueryOptions = {consistency: 'strong'};
+const manuallyCreatedQuery = new Datastore.Query(ds, kind, 'namespace');
+const options: QueryOptions = { consistency: 'strong' };
 const query: Query = ds.createQuery(kind);
 const complexQuery = ds.createQuery('special_namespace', kind)
                        .hasAncestor(ancestorKey)
                        .filter('aProp', '<', 0)
                        .filter('location', dsGeopoint)
-                       .order('location', {descending: true})
+                       .order('location', { descending: true })
                        .select(['1', '2'])
                        .groupBy(['group', 'props'])
                        .limit(1000)
@@ -83,7 +89,7 @@ const queryStream: NodeJS.ReadableStream = complexQuery.runStream();
 const dsQueryStream: NodeJS.ReadableStream = ds.runQueryStream(complexQuery, options);
 complexQuery.run()
             .then((data: QueryResult) => {
-                const {moreResults, endCursor} = data[1];
+                const { moreResults, endCursor } = data[1];
                 const frontEndResponse: any = {};
                 switch (moreResults) {
                 case Datastore.NO_MORE_RESULTS:
@@ -99,9 +105,9 @@ query.run((err: Error, entities: TestEntity[], info: QueryInfo) => {
     if (err) {
         return;
     }
-    const {moreResults, endCursor} = info;
+    const { moreResults, endCursor } = info;
 
-    const frontEndResponse: any = {entities};
+    const frontEndResponse: any = { entities };
     switch (moreResults) {
     case ds.NO_MORE_RESULTS:
         frontEndResponse.nextPageCursor = null;
@@ -129,21 +135,21 @@ const upsertPromise: Promise<CommitResult> = ds.upsert(entityToCreate);
 ds.get(key, (err, entity) => {
 });
 ds.get(key).then((data: [TestEntity]) => data[0]);
-ds.get(key, {maxApiCalls: 1})
+ds.get(key, { maxApiCalls: 1 })
   .then((data: [TestEntity]) => {
       const blah: TestEntity = data[0];
   });
-ds.get([key, key], {maxApiCalls: 1})
+ds.get([key, key], { maxApiCalls: 1 })
   .then((data: [TestEntity[]]) => {
       const blah: TestEntity[] = data[0];
   });
-ds.get(key, (err: Error, data: any[]) => data[0]);
+ds.get(key, (err: Error, data: [TestEntity]) => data[0]);
 
 // We can verify the data was saved by using {module:datastore#get}.
 ds.get(
     key,
     (err, entity) => {
-    }
+    },
 );
 
 // Deleting entities:
@@ -158,7 +164,7 @@ const transaction: DatastoreTransaction = ds.transaction();
 const manuallyCreatedTx = new Datastore.Transaction(ds);
 
 transaction.run((err, activeTx: DatastoreTransaction) => {
-    transaction.get(key, (err: Error, entity: TestEntity) => {
+    transaction.get(key, (err: Error, entity: [TestEntity]) => {
         if (err) {
             transaction.rollback(err => {
             });
