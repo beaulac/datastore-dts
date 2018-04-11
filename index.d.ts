@@ -20,15 +20,11 @@ declare module '@google-cloud/datastore' {
         DatastoreCoords,
         OneOrMany,
     } from '@google-cloud/datastore/entity';
-    import {
-        DatastoreRequest as DatastoreRequest_,
-        CommitCallback,
-        CommitResult,
-    } from '@google-cloud/datastore/request';
     import { DatastoreTransaction } from '@google-cloud/datastore/transaction';
+    import DatastoreRequest = require('@google-cloud/datastore/request');
     import Query = require('@google-cloud/datastore/query');
 
-    class Datastore extends DatastoreRequest_ {
+    class Datastore extends DatastoreRequest {
         constructor(options: InitOptions);
 
         readonly KEY: typeof KEY_SYMBOL;
@@ -42,18 +38,18 @@ declare module '@google-cloud/datastore' {
         static readonly NO_MORE_RESULTS: Query.NoMoreResults;
 
         static readonly Query: typeof Query;
-        static readonly DatastoreRequest: typeof DatastoreRequest_;
+        static readonly DatastoreRequest: typeof DatastoreRequest;
         static readonly Transaction: typeof DatastoreTransaction;
 
         // tslint:disable-next-line unified-signatures (Arg is semantically different)
         createQuery(namespace: string, kind: string): Query;
         createQuery(kind: string): Query;
 
-        save(entities: OneOrMany<object>, callback: CommitCallback): void;
-        save(entities: OneOrMany<object>): Promise<CommitResult>;
+        save(entities: OneOrMany<object>, callback: DatastoreRequest.CommitCallback): void;
+        save(entities: OneOrMany<object>): Promise<DatastoreRequest.CommitResult>;
 
-        delete(keyOrKeys: DatastoreKey | ReadonlyArray<DatastoreKey>, callback: CommitCallback): void;
-        delete(keyOrKeys: DatastoreKey | ReadonlyArray<DatastoreKey>): Promise<CommitResult>;
+        delete(keyOrKeys: DatastoreKey | ReadonlyArray<DatastoreKey>, callback: DatastoreRequest.CommitCallback): void;
+        delete(keyOrKeys: DatastoreKey | ReadonlyArray<DatastoreKey>): Promise<DatastoreRequest.CommitResult>;
 
         transaction(): DatastoreTransaction;
 
@@ -159,7 +155,7 @@ declare module '@google-cloud/datastore/entity' {
 declare module '@google-cloud/datastore/query' {
     // tslint:disable-next-line no-duplicate-imports (This rule is broken for multiple modules per file)
     import { DatastoreKey } from '@google-cloud/datastore/entity';
-    import { DatastoreRequest } from '@google-cloud/datastore/request';
+    import DatastoreRequest = require('@google-cloud/datastore/request');
 
     export = Query;
 
@@ -228,14 +224,19 @@ declare module '@google-cloud/datastore/request' {
     import Query = require('@google-cloud/datastore/query');
     import QueryOptions = Query.QueryOptions;
     import QueryCallback = Query.QueryCallback;
+    import CommitCallback = DatastoreRequest.CommitCallback;
+    import CommitResult = DatastoreRequest.CommitResult;
+    import GetCallback = DatastoreRequest.GetCallback;
+
+    export = DatastoreRequest;
 
     /**
      * Creates requests to the Datastore endpoint.
      * Designed to be inherited by {@link Datastore} & {@link DatastoreTransaction}
      */
     abstract class DatastoreRequest {
-        allocateIds(incompleteKey: DatastoreKey, n: number, callback: AllocateIdsCallback): void;
-        allocateIds(incompleteKey: DatastoreKey, n: number): Promise<AllocateIdsResult>;
+        allocateIds(incompleteKey: DatastoreKey, n: number, callback: DatastoreRequest.AllocateIdsCallback): void;
+        allocateIds(incompleteKey: DatastoreKey, n: number): Promise<DatastoreRequest.AllocateIdsResult>;
 
         createReadStream(keys: DatastoreKey | ReadonlyArray<DatastoreKey>,
                          options: QueryOptions): NodeJS.ReadableStream;
@@ -271,33 +272,35 @@ declare module '@google-cloud/datastore/request' {
         upsert(entities: OneOrMany): Promise<CommitResult>;
     }
 
-    interface MutationResult {
-        key: DatastoreKey;
-        conflictDetected: boolean;
-        version: number;
+    namespace DatastoreRequest {
+        interface MutationResult {
+            key: DatastoreKey;
+            conflictDetected: boolean;
+            version: number;
+        }
+
+        interface CommitResponse {
+            mutationResults: MutationResult[];
+            indexUpdates: number;
+        }
+
+        type CommitCallback = (err: Error, result: CommitResponse) => void;
+        type CommitResult = [CommitResponse];
+
+        type GetCallback<T> = (err: Error, entity: T) => void;
+
+        type AllocateIdsCallback = (err: Error, keys: DatastoreKey[]) => void;
+        type AllocateIdsResult = [DatastoreKey[]];
     }
-
-    interface CommitResponse {
-        mutationResults: MutationResult[];
-        indexUpdates: number;
-    }
-
-    type CommitCallback = (err: Error, result: CommitResponse) => void;
-    type CommitResult = [CommitResponse];
-
-    type GetCallback<T> = (err: Error, entity: T) => void;
-
-    type AllocateIdsCallback = (err: Error, keys: DatastoreKey[]) => void;
-    type AllocateIdsResult = [DatastoreKey[]];
 }
 
 declare module '@google-cloud/datastore/transaction' {
     import Datastore_ = require('@google-cloud/datastore');
-    // tslint:disable-next-line no-duplicate-imports (This rule is broken for multiple modules per file)
-    import { DatastoreKey, OneOrMany } from '@google-cloud/datastore/entity';
     import Query = require('@google-cloud/datastore/query');
     // tslint:disable-next-line no-duplicate-imports
-    import { DatastoreRequest, CommitCallback, CommitResult } from '@google-cloud/datastore/request';
+    import DatastoreRequest = require('@google-cloud/datastore/request');
+    // tslint:disable-next-line no-duplicate-imports (This rule is broken for multiple modules per file)
+    import { DatastoreKey, OneOrMany } from '@google-cloud/datastore/entity';
 
     class DatastoreTransaction extends DatastoreRequest {
         constructor(datastore: Datastore_);
@@ -310,8 +313,8 @@ declare module '@google-cloud/datastore/transaction' {
 
         delete(keyOrKeys: DatastoreKey | ReadonlyArray<DatastoreKey>): void;
 
-        commit(): Promise<CommitResult>;
-        commit(callback: CommitCallback): void;
+        commit(): Promise<DatastoreRequest.CommitResult>;
+        commit(callback: DatastoreRequest.CommitCallback): void;
 
         rollback(): Promise<RollbackResult>;
         rollback(callback: RollbackCallback): void;
