@@ -1,4 +1,4 @@
-// Type definitions for @google-cloud/datastore 1.3
+// Type definitions for @google-cloud/datastore 1.4
 // Project: https://github.com/googleapis/nodejs-datastore
 // Definitions by: Antoine Beauvais-Lacasse <https://github.com/beaulac>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
@@ -161,22 +161,38 @@ declare module '@google-cloud/datastore/entity' {
         key: DatastoreKey;
     }
 
-    interface LongPayload<T extends object = object> extends KeyedByProperty {
+    /**
+     * @deprecated
+     */
+    interface LegacyEntity<T extends object = object> extends KeyedByProperty {
         data: Array<EntityDataProperty<T>>;
     }
 
     interface EntityDataProperty<T extends object = object> {
         name: keyof T;
-        value: any;
+        value: EntityValue;
         excludeFromIndexes?: boolean;
     }
 
-    interface ShortPayload<T extends object = object> extends KeyedByProperty {
+    interface NestedEntityValue {
+        [key: string]: EntityValue;
+    }
+
+    interface EntityValueArray {
+        [index: number]: EntityValue;
+    }
+
+    type EntityValue = undefined | null
+        | boolean | number | string | Date | Buffer
+        | DatastoreKey | DatastoreGeopoint | DatastoreInt | DatastoreDouble
+        | NestedEntityValue | EntityValueArray;
+
+    interface Entity<T extends object = object> extends KeyedByProperty {
         data: T;
         excludeFromIndexes?: string[];
     }
 
-    type DatastorePayload<T extends object = object> = LongPayload<T> | ShortPayload<T>;
+    type DatastorePayload<T extends object = object> = Entity<T> | LegacyEntity<T>;
 
     type ObjOrPayload<T extends object = object> = KeyedBySymbol<T> | DatastorePayload<T>;
     type OneOrMany<T extends object = object> = ObjOrPayload<T> | Array<ObjOrPayload<T>>;
@@ -272,9 +288,9 @@ declare module '@google-cloud/datastore/request' {
         delete(keyOrKeys: DatastoreKey | ReadonlyArray<DatastoreKey>, callback: CommitCallback): void;
         delete(keyOrKeys: DatastoreKey | ReadonlyArray<DatastoreKey>): Promise<CommitResult> | void;
 
-        get(key: DatastoreKey, options: QueryOptions, callback: GetCallback<KeyedBySymbol>): void;
+        get(key: DatastoreKey, options: QueryOptions, callback: GetCallback<KeyedBySymbol | undefined>): void;
         get(keys: ReadonlyArray<DatastoreKey>, options: QueryOptions, callback: GetCallback<KeyedBySymbol[]>): void;
-        get(key: DatastoreKey, callback: GetCallback<KeyedBySymbol>): void;
+        get(key: DatastoreKey, callback: GetCallback<KeyedBySymbol | undefined>): void;
         get(keys: ReadonlyArray<DatastoreKey>, callback: GetCallback<KeyedBySymbol[]>): void;
 
         get(key: DatastoreKey, options?: QueryOptions): Promise<[KeyedBySymbol | undefined]>;

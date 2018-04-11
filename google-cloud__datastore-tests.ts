@@ -11,7 +11,7 @@ import {
     DatastoreGeopoint,
     DatastoreInt,
     DatastoreKey,
-    DatastoreKeyPath, KeyedBySymbol,
+    DatastoreKeyPath,
 } from '@google-cloud/datastore/entity';
 import { AllocateIdsResult, CommitCallback, CommitResponse, CommitResult } from '@google-cloud/datastore/request';
 
